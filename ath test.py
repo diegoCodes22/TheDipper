@@ -1,4 +1,7 @@
-from TWSIBAPI_MODULES.DataStreams import reqAllTimeHigh
-from TWSIBAPI_MODULES.Contracts import stock
+from DbManager import *
 
-print(reqAllTimeHigh(["127.0.0.1", 7497, 0], stock("SPY")))
+
+db = DbManager("../TWS1/watchlist.db")
+ticker_list = db.select_all()
+for ticker in ticker_list:
+    print(ticker[''])
