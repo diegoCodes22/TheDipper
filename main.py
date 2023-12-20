@@ -37,15 +37,15 @@ def dipper_start(config: AlgoConfig):
 
 if __name__ == '__main__':
     while True:
-        x = int(input("1. Run algorithm with standard configurations.\n"
-                      "2. Run algorithm with custom configurations.\n"
-                      "3. Edit watchlist.\n"
-                      "-1 EXIT.\n"))
+        x = int(input("1. Run algorithm with standard configurations\n"
+                      "2. Run algorithm with custom configurations\n"
+                      "3. Edit watchlist\n"
+                      "-1 EXIT\n"
+                      "- "))
         if x == -1:
             break
         w = input('Watchlist name: ')
         if x == 2:
-            # print("If input is empty, standard setting is used for that parameter.")
             dbp = input('Path to database file or portfolio: ')
             dc = input('Dip calculation (Standard, Relative or Custom): ')
             ra = bool(input('Run auto (True or False): '))
@@ -59,7 +59,7 @@ if __name__ == '__main__':
             configs = AlgoConfig(w)
             dipper_start(configs)
         elif x == 3:
-            dbp = input('Path to database file, if empty, standard file will be used.\n')
+            dbp = input('Path to database file, if empty, standard file will be used. ')
             if len(dbp) == 0:
                 configs = AlgoConfig(w)
             else:

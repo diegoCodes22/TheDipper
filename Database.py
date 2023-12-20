@@ -14,6 +14,7 @@ class DbManager:
         self.cur.close()
 
     def insert_tickers(self) -> None:
+        # sqlite3.IntegrityError: UNIQUE constraint failed: Watchlist.ticker
         tickers = input("Comma separated list of tickers ', ': ").split(', ')
         for ticker in tickers:
             if ticker in self.custom_query('SELECT ticker FROM {}'.format(self.watchlist)):
@@ -61,10 +62,11 @@ class DbManager:
         return self.cur.fetchall()
 
     def exists(self) -> None:
-        self.cur.execute('SELECT COUNT(*) FROM information_schema.tables WHERE table_name = ?', (self.watchlist, ))
-        if self.cur.fetchone()[0] == 0:
-            c = input("Watchlist does not exist, do you want to create a new one? (y/n) ")
-            if c == 'y':
+        self.cur.execute('SELECT * FROM sqlite_master WHERE type = "table"')
+        wlist = [watchlist["name"] for watchlist in list(self.cur.fetchall())]
+        print(wlist)
+        if self.watchlist not in wlist:
+            if input("Watchlist does not exist, do you want to create a new one? (y/n) ") == 'y':
                 self.create()
 
     def create(self):
