@@ -1,74 +1,74 @@
-from TWSIBAPI_MODULES.DataStreams import reqAllTimeHigh, reqCurrentPrice
+from TWSIBAPI_MODULES.DataStreams import reqCurrentPrice
 from TWSIBAPI_MODULES.Contracts import stock
 from TWSIBAPI_MODULES.Orders import place_order
-from ibapi.contract import Contract
-from ibapi.order import Order
-from Database import DbManager, ticker_insert
+from functions import *
+from time import sleep
 
 
-CONN_VARS: list = ["127.0.0.1", 7497, 0]
-DIP_CALC: str = "standard"  # standard, relative, or custom
-WATCHLIST: str = "watchlist1.db"  # path to watchlist db
+def dipper(config: AlgoConfig):
+    stk = stock(config.SYMBOL)
+    current_price = reqCurrentPrice(config.CONN_VARS, stk)
+    da = dipper_algo(config, stk, current_price)
+    if 0 < da != config.db.select_status(config.SYMBOL):
+        if config.RUN_AUTO:
+            place_order(config.CONN_VARS, stk, buy(current_price))
+            config.db.update_status(config.SYMBOL, da)
+            if config.DIP_CALC == "Relative":
+                config.db.update_rh(config.SYMBOL, current_price)
+            config.db.commit_operation()
+        else:
+            print(f"Buy {config.SYMBOL} at {current_price}. Dipper algo {da}.")
 
 
-def standard_calc(perc_dip, perc_drop):
-    if perc_dip < perc_drop:
-        return 0
-    else:
-        for x in range(1, 10):
-            if (perc_drop * x) + 1 >= perc_dip >= (perc_drop * x):
-                return x
-    return -1
-
-
-def dipper_algo(contract: Contract, current_price: float, perc_drop: float = 5.0):
-    if DIP_CALC == "standard":
-        ath = reqAllTimeHigh(CONN_VARS, contract)
-        perc_dip = round(((current_price - ath) / ath) * 100, 1)
-        dc = standard_calc(perc_dip, perc_drop)
-        return dc
-
-
-def buy(current_price: float, multiplier: float = 1.0):
-    order = Order()
-    order.action = "BUY"
-    order.orderType = "LMT"
-    order.totalQuantity = multiplier
-    order.lmtPrice = current_price
-    return order
-
-
-def thedipper(run_auto: bool = True, watchlist: str = "", ticker: str = ""):
-    if ticker != "" and watchlist == "":
-        stk = stock(ticker)
-        current_price = reqCurrentPrice(CONN_VARS, stk)
-        da = dipper_algo(stk, current_price)
-        if da > 0:
-            if run_auto:
-                place_order(CONN_VARS, stk, buy(current_price))
-            else:
-                print(f"Buy {ticker} at {current_price}. Dipper algo {da}")
-
-    elif watchlist != "" and ticker == "":
-        db = DbManager(watchlist)
+def dipper_start(config: AlgoConfig):
+    if config.SYMTYPE == "Watchlist":
         while True:
-            x = input("Insert, Run, Present, Exit: ").upper()
-            if x == 'E':
-                break
-            elif x == "I":
-                ticker_insert(db, CONN_VARS)
-            elif x == "R":
-                ticker_list = db.select_all()
-                for ticker in ticker_list:
-                    thedipper(ticker=ticker[ticker])
-            elif x == "P":
-                z = db.custom_query('SELECT ticker, status FROM Watchlist')
-                print(z)
-
-    # elif mode == "portfolio":
-    #     pass
+            ticker_list = config.db.select_all()
+            for ticker in ticker_list:
+                config.SYMBOL = ticker['ticker']
+                dipper(config)
+            print((ticker['ticker'], ticker['status']) for ticker in ticker_list)
+            sleep(config.INTERVAL * 60)
+    elif config.SYMTYPE == "Portfolio":
+        print("Implementation in progress.")
     else:
-        print("Invalid mode")
+        print("Invalid ")
 
 
-thedipper(watchlist=WATCHLIST)
+if __name__ == '__main__':
+    while True:
+        x = int(input("1. Run algorithm with standard configurations.\n"
+                      "2. Run algorithm with custom configurations.\n"
+                      "3. Edit watchlist.\n"
+                      "-1 EXIT.\n"))
+        if x == -1:
+            break
+        w = input('Watchlist name: ')
+        if x == 2:
+            # print("If input is empty, standard setting is used for that parameter.")
+            dbp = input('Path to database file or portfolio: ')
+            dc = input('Dip calculation (Standard, Relative or Custom): ')
+            ra = bool(input('Run auto (True or False): '))
+            i = int(input('Interval (How often does the algorithm check): '))
+            h = input("Host: ")
+            p = int(input('Port: '))
+            idd = int(input('id: '))
+            configs = AlgoConfig(w, dbp, dc, ra, i, h, p, idd)
+            dipper_start(configs)
+        elif x == 1:
+            configs = AlgoConfig(w)
+            dipper_start(configs)
+        elif x == 3:
+            dbp = input('Path to database file, if empty, standard file will be used.\n')
+            if len(dbp) == 0:
+                configs = AlgoConfig(w)
+            else:
+                configs = AlgoConfig(w, DATABASE_PATH=dbp)
+            configs.db.present()
+            a = input("Do you want to add (0) or remove (1) stocks, press any key to return to menu: ")
+            if a == '0':
+                configs.db.insert_tickers()
+            elif a == '1':
+                configs.db.remove_tickers()
+            else:
+                continue
