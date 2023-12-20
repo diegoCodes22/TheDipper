@@ -2,40 +2,46 @@ import sqlite3
 
 
 class DbManager:
-    def __init__(self, db_path, watchlist):
+    def __init__(self, db_path: str):
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()
         self.conn = conn
         self.cur = cur
-        self.watchlist = watchlist
+        self.watchlist = ''
+        self.wlist = []
 
     def close_db(self) -> None:
         self.cur.close()
 
     def insert_tickers(self) -> None:
-        # sqlite3.IntegrityError: UNIQUE constraint failed: Watchlist.ticker
-        tickers = input("Comma separated list of tickers ', ': ").split(', ')
+        tickers = input("Comma separated list of tickers ', ': ").upper().split(', ')
         for ticker in tickers:
-            if ticker in self.custom_query('SELECT ticker FROM {}'.format(self.watchlist)):
+            try:
+                tl = self.custom_query('SELECT ticker FROM {}'.format(self.watchlist))[0]['ticker']
+            except IndexError:
+                tl = []
+            if ticker in tl:
                 print(f"{ticker} already exists in database")
                 continue
             else:
                 self.cur.execute('INSERT INTO {} (ticker) VALUES(?)'.format(self.watchlist), (ticker,))
+
         self.commit_operation()
 
     def remove_tickers(self) -> None:
-        tickers = input("Comma separated list of tickers ', ': ").split(', ')
+        tickers = input("Comma separated list of tickers ', ': ").upper().split(', ')
         print(tickers)
         x = input("Are you sure you want to delete these tickers from the database?\n"
                   "Your positions will NOT change but the algorithm will not take them into account (y/n): ")
         if x == 'y':
             for ticker in tickers:
-                if ticker not in self.custom_query('SELECT ticker FROM {}'.format(self.watchlist)):
+                if ticker not in self.custom_query('SELECT ticker FROM {}'.format(self.watchlist))[0]['ticker']:
                     print(f"{ticker} not in database")
                     continue
                 else:
                     self.cur.execute('DELETE FROM {} WHERE ticker = ?'.format(self.watchlist), (ticker, ))
+                    print(f"{ticker} deleted from database")
             self.commit_operation()
         else:
             return
@@ -61,25 +67,40 @@ class DbManager:
         self.cur.execute('SELECT * FROM {}'.format(self.watchlist))
         return self.cur.fetchall()
 
-    def exists(self) -> None:
+    def show_all(self) -> None:
         self.cur.execute('SELECT * FROM sqlite_master WHERE type = "table"')
-        wlist = [watchlist["name"] for watchlist in list(self.cur.fetchall())]
-        print(wlist)
-        if self.watchlist not in wlist:
-            if input("Watchlist does not exist, do you want to create a new one? (y/n) ") == 'y':
+        self.wlist = [watchlist["name"] for watchlist in list(self.cur.fetchall())]
+        print(self.wlist if len(self.wlist) > 0 else "This database is empty.")
+
+    def exists(self, wname: str) -> None:
+        if wname in self.wlist:
+            self.watchlist = wname
+        elif wname not in self.wlist:
+            if input("This watchlist does not exist, do you want to create a new one? (y/n): ") == 'y':
+                self.watchlist = wname
                 self.create()
 
-    def create(self):
+    def create(self) -> None:
         self.cur.execute('''CREATE TABLE {} (ticker TEXT NOT NULL CONSTRAINT ticker_key UNIQUE, 
-        all_time_high REAL DEFAULT 0 NOT NULL, relative_high REAL DEFAULT 0, status INTEGER)'''.format(self.watchlist))
+        all_time_high REAL DEFAULT 0 NOT NULL, relative_high REAL DEFAULT 0, status INTEGER DEFAULT 0)'''.format(self.watchlist))
+        self.wlist.append(self.wlist)
 
-    def present(self):
+    def present(self) -> None:
         sa = self.select_all()
-        print((q['ticker'], q['status']) for q in sa)
+        if len(list(sa)) == 0:
+            print("Watchlist is empty")
+        else:
+            print([(q['ticker'], q['status']) for q in list(sa)])
 
     def custom_query(self, query: str, params: tuple = ()) -> list:
         self.cur.execute(query, params)
         return self.cur.fetchall()
+
+    def delete_watchlist(self) -> None:
+        if input("Are you sure you want to delete this watchlist? This action is permanent and all its "
+                 "contents will be lost (y/n): ") == "y":
+            self.cur.execute("DROP TABLE {}".format(self.watchlist))
+            self.commit_operation()
 
     def commit_operation(self) -> None:
         self.conn.commit()
