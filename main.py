@@ -1,40 +1,5 @@
 import sqlite3
-
-from TWSIBAPI_MODULES.DataStreams import reqCurrentPrice
-from TWSIBAPI_MODULES.Contracts import stock
-from TWSIBAPI_MODULES.Orders import place_order
 from functions import *
-from time import sleep
-
-
-def dipper(config: AlgoConfig):
-    stk = stock(config.SYMBOL)
-    current_price = reqCurrentPrice(config.CONN_VARS, stk)
-    da = dipper_algo(config, stk, current_price)
-    if 0 < da != config.db.select_status(config.SYMBOL):
-        if config.RUN_AUTO:
-            place_order(config.CONN_VARS, stk, buy(current_price))
-            config.db.update_status(config.SYMBOL, da)
-            if config.DIP_CALC == "Relative":
-                config.db.update_rh(config.SYMBOL, current_price)
-            config.db.commit_operation()
-        else:
-            print(f"Buy {config.SYMBOL} at {current_price}. Dipper algo {da}.")
-
-
-def dipper_start(config: AlgoConfig):
-    if config.SYMTYPE == "Watchlist":
-        while True:
-            ticker_list = config.db.select_all()
-            for ticker in ticker_list:
-                config.SYMBOL = ticker['ticker']
-                dipper(config)
-            print([(ticker['ticker'], ticker['status']) for ticker in ticker_list])
-            sleep(config.INTERVAL * 60)
-    elif config.SYMTYPE == "Portfolio":
-        print("Implementation in progress.")
-    else:
-        print("Invalid ")
 
 
 if __name__ == '__main__':  # Handle error when data isn't available for a specific stock because of market data subs
@@ -45,6 +10,10 @@ if __name__ == '__main__':  # Handle error when data isn't available for a speci
                       "-1 EXIT\n"
                       "- "))
         if x == -1:
+            try:
+                configs.db.close_db()
+            except NameError:
+                pass
             break
         if x == 2:
             dbp = input('Path to database file or portfolio: ')

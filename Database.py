@@ -1,5 +1,8 @@
 import sqlite3
 
+# REFACTOR CURSOR TO CONNECTION
+# CLOSE CONNECTION TO DB BETWEEN INTERVAL IF INTERVAL IS MORE THAN 5 MINUTES ABD CREATE A FUNCTION TO RECONNECT
+
 
 class DbManager:
     def __init__(self, db_path: str):
@@ -13,6 +16,7 @@ class DbManager:
 
     def close_db(self) -> None:
         self.cur.close()
+        self.conn.close()
 
     def insert_tickers(self) -> None:
         tickers = input("Comma separated list of tickers ', ': ").upper().split(', ')
