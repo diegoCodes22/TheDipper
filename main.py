@@ -18,12 +18,13 @@ if __name__ == '__main__':  # Handle error when data isn't available for a speci
         if x == 2:
             dbp = input('Path to database file or portfolio: ')
             dc = input('Dip calculation (Standard, Relative or Custom): ')
+            pd = float(input('Percentage drop: '))
             ra = bool(input('Run auto (True or False): '))
             i = int(input('Interval (How often does the algorithm check): '))
             h = input("Host: ")
             p = int(input('Port: '))
             idd = int(input('id: '))
-            configs = AlgoConfig(dbp, dc, ra, i, h, p, idd)
+            configs = AlgoConfig(dbp, dc, pd, ra, i, h, p, idd)
             dipper_start(configs)
         elif x == 1:
             configs = AlgoConfig()

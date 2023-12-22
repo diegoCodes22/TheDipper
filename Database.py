@@ -1,7 +1,5 @@
 import sqlite3
 
-# REFACTOR CURSOR TO CONNECTION
-
 
 class DbManager:
     def __init__(self, db_path: str):
@@ -88,7 +86,8 @@ class DbManager:
 
     def create(self) -> None:
         self.cur.execute('''CREATE TABLE {} (ticker TEXT NOT NULL CONSTRAINT ticker_key UNIQUE, 
-        all_time_high REAL DEFAULT 0 NOT NULL, relative_high REAL DEFAULT 0, status INTEGER DEFAULT 0)'''.format(self.watchlist))
+        all_time_high REAL DEFAULT 0 NOT NULL, relative_high REAL DEFAULT 0, 
+        status INTEGER DEFAULT 0)'''.format(self.watchlist))
         self.wlist.append(self.wlist)
 
     def present(self) -> None:

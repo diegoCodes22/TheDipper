@@ -21,7 +21,7 @@ def perc_dip(current_price: float, comp: float) -> float:
     return round(((current_price - comp) / comp) * 100, 1)
 
 
-def dipper_algo(config: AlgoConfig, contract: Contract, current_price: float, perc_drop: float = 5.0) -> int:
+def dipper_algo(config: AlgoConfig, contract: Contract, current_price: float) -> int:
     pdrop = 0
     if config.DIP_CALC == "Standard":
         ath = reqAllTimeHigh(config.CONN_VARS, contract)
@@ -30,7 +30,7 @@ def dipper_algo(config: AlgoConfig, contract: Contract, current_price: float, pe
         r = config.db.select_rh(config.SYMBOL)
         rel = reqAllTimeHigh(config.CONN_VARS, contract) if r == 0 else r
         pdrop = perc_dip(current_price, rel)
-    return standard_calc(pdrop, perc_drop)
+    return standard_calc(pdrop, config.perc_drop)
 
 
 def dipper(config: AlgoConfig):
