@@ -49,24 +49,18 @@ def dipper(config: AlgoConfig):
 
 
 def dipper_start(config: AlgoConfig):
-    if config.SYMTYPE == "Watchlist":
-        while True:
-            ticker_list = config.db.select_all()
-            for ticker in ticker_list:
-                config.SYMBOL = ticker['ticker']
-                dipper(config)
-            print([(ticker['ticker'], ticker['status']) for ticker in ticker_list])
-            if config.INTERVAL < 5:
-                sleep(config.INTERVAL * 60)
-            else:
-                config.db.close_db()
-                sleep(config.INTERVAL * 60)
-                config.db.start_db()
-
-    elif config.SYMTYPE == "Portfolio":
-        print("Implementation in progress.")
-    else:
-        print("Invalid ")
+    while True:
+        ticker_list = config.db.select_all()
+        for ticker in ticker_list:
+            config.SYMBOL = ticker['ticker']
+            dipper(config)
+        print([(ticker['ticker'], ticker['status']) for ticker in ticker_list])
+        if config.INTERVAL < 5:
+            sleep(config.INTERVAL * 60)
+        else:
+            config.db.close_db()
+            sleep(config.INTERVAL * 60)
+            config.db.start_db()
 
 
 def buy(current_price: float, multiplier: float = 1.0) -> Order:

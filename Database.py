@@ -10,9 +10,13 @@ class DbManager:
         self.wlist = []
 
     def start_db(self) -> None:
-        self.conn = sqlite3.connect(self.db_path)
-        self.conn.row_factory = sqlite3.Row
-        self.cur = self.conn.cursor()
+        try:
+            self.conn = sqlite3.connect(self.db_path)
+            self.conn.row_factory = sqlite3.Row
+            self.cur = self.conn.cursor()
+        except sqlite3.OperationalError:
+            print("Invalid database file, Operational Error raised.")
+            exit(1)
 
     def close_db(self) -> None:
         self.cur.close()

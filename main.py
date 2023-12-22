@@ -16,8 +16,8 @@ if __name__ == '__main__':  # Handle error when data isn't available for a speci
                 pass
             break
         if x == 2:
-            dbp = input('Path to database file or portfolio: ')
-            dc = input('Dip calculation (Standard, Relative or Custom): ')
+            dbp = input('Path to database file: ')
+            dc = input('Dip calculation (Standard or Relative): ')
             pd = float(input('Percentage drop: '))
             ra = bool(input('Run auto (True or False): '))
             i = int(input('Interval (How often does the algorithm check): '))

@@ -18,11 +18,3 @@ class AlgoConfig:
         self.db.show_all()
         self.LIST = ''.join(ch for ch in input("Enter watchlist name: ") if ch.isalnum())
         self.db.exists(self.LIST)
-
-        self.SYMTYPE = ''
-        if self.DATABASE_PATH.split('.')[1] == 'db':
-            self.SYMTYPE = 'Watchlist'
-        elif self.DATABASE_PATH == 'portfolio':
-            self.SYMTYPE = 'Portfolio'
-
-
