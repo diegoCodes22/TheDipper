@@ -1,18 +1,20 @@
 import sqlite3
 
 # REFACTOR CURSOR TO CONNECTION
-# CLOSE CONNECTION TO DB BETWEEN INTERVAL IF INTERVAL IS MORE THAN 5 MINUTES ABD CREATE A FUNCTION TO RECONNECT
 
 
 class DbManager:
     def __init__(self, db_path: str):
-        conn = sqlite3.connect(db_path)
-        conn.row_factory = sqlite3.Row
-        cur = conn.cursor()
-        self.conn = conn
-        self.cur = cur
+        self.conn = None
+        self.cur = None
+        self.db_path = db_path
         self.watchlist = ''
         self.wlist = []
+
+    def start_db(self) -> None:
+        self.conn = sqlite3.connect(self.db_path)
+        self.conn.row_factory = sqlite3.Row
+        self.cur = self.conn.cursor()
 
     def close_db(self) -> None:
         self.cur.close()

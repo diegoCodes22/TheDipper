@@ -13,6 +13,7 @@ class AlgoConfig:
         self.SYMBOL = ''
 
         self.db = DbManager(self.DATABASE_PATH)
+        self.db.start_db()
         self.db.show_all()
         self.LIST = ''.join(ch for ch in input("Enter watchlist name: ") if ch.isalnum())
         self.db.exists(self.LIST)

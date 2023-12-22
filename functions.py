@@ -56,7 +56,13 @@ def dipper_start(config: AlgoConfig):
                 config.SYMBOL = ticker['ticker']
                 dipper(config)
             print([(ticker['ticker'], ticker['status']) for ticker in ticker_list])
-            sleep(config.INTERVAL * 60)
+            if config.INTERVAL < 5:
+                sleep(config.INTERVAL * 60)
+            else:
+                config.db.close_db()
+                sleep(config.INTERVAL * 60)
+                config.db.start_db()
+
     elif config.SYMTYPE == "Portfolio":
         print("Implementation in progress.")
     else:
